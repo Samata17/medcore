@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# builds
+.next/
+dist/
+out/
+build/
+*.tsbuildinfo
+next-env.d.ts
+
+# env files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# logs & OS files
+npm-debug.log*
+*.log
+.DS_Store
+Thumbs.db
+
+# editors
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# test output
+coverage/
+
+# local uploads
+apps/api/uploads/

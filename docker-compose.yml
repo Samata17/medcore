@@ -1,0 +1,85 @@
+# Local development services for MedCore HMS.
+# Start:  npm run db:up      Stop: npm run db:down
+# Ports are bound to 127.0.0.1 so the database isn't exposed to your network.
+# Host ports 5433/6380 avoid clashing with other local Postgres/Redis instances.
+# The password below is for local development only.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: medcore-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: medcore
+      POSTGRES_PASSWORD: medcore_dev_password
+      POSTGRES_DB: medcore
+    ports:
+      - "127.0.0.1:${MEDCORE_PG_PORT:-5433}:5432"
+    volumes:
+      - medcore_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U medcore -d medcore"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: medcore-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:${MEDCORE_REDIS_PORT:-6380}:6379"
+    volumes:
+      - medcore_redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # ---- Optional: run the whole app in containers ----
+  # docker compose --profile full up -d --build
+  # Uses your apps/api/.env for secrets; database/redis addresses are overridden below.
+  api:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: medcore-api
+    restart: unless-stopped
+    env_file: apps/api/.env
+    environment:
+      # Local preview over plain HTTP. Real deployments use NODE_ENV=production + HTTPS.
+      NODE_ENV: development
+      DATABASE_URL: postgresql://medcore:medcore_dev_password@postgres:5432/medcore?schema=public
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /app/apps/api/uploads
+    ports:
+      - "127.0.0.1:${MEDCORE_API_PORT:-4100}:4100"
+    volumes:
+      - medcore_uploads:/app/apps/api/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  web:
+    profiles: ["full"]
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: http://localhost:${MEDCORE_API_PORT:-4100}/api/v1
+    container_name: medcore-web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MEDCORE_WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  medcore_pgdata:
+  medcore_redis:
+  medcore_uploads:

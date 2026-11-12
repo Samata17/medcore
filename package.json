@@ -1,0 +1,37 @@
+{
+  "name": "medcore-hms",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MedCore HMS - multi-hospital management platform (MCA full-stack project)",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "postinstall": "npm run build -w @medcore/types",
+    "build:types": "npm run build -w @medcore/types",
+    "dev:web": "npm run dev -w @medcore/web",
+    "dev:api": "npm run dev -w @medcore/api",
+    "build:web": "npm run build -w @medcore/web",
+    "build:api": "npm run build:types && npm run build -w @medcore/api",
+    "start:web": "npm run start -w @medcore/web",
+    "start:api": "npm run start -w @medcore/api",
+    "db:up": "docker compose up -d postgres redis",
+    "db:down": "docker compose down",
+    "db:migrate": "npm run db:deploy -w @medcore/api",
+    "db:seed": "npm run db:seed -w @medcore/api",
+    "db:reset": "npm run db:reset -w @medcore/api",
+    "db:studio": "npm run db:studio -w @medcore/api",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test -w @medcore/types && npm run test -w @medcore/api",
+    "test:e2e": "npm run build:types && npm run test:e2e -w @medcore/api"
+  },
+  "overrides": {
+    "postcss": "^8.5.32",
+    "multer": "^2.5.0",
+    "deepmerge-ts": "^8.0.2"
+  },
+  "engines": {
+    "node": ">=20.12.0"
+  }
+}
