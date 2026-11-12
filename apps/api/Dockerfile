@@ -3,7 +3,7 @@
 #   docker build -f apps/api/Dockerfile -t medcore-api .
 # All configuration comes from environment variables at run time; no secrets are baked in.
 
-FROM node:22-bookworm-slim AS base
+FROM node:25-bookworm-slim AS base
 # OpenSSL is required by the Prisma query engine.
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
